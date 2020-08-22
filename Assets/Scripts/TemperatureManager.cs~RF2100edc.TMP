@@ -1,0 +1,147 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class TemperatureManager : MonoBehaviour
+{
+    [Header("Pinguins")]
+    Dictionary<Vector2Int, TemperatureCell> penguinMap = new Dictionary<Vector2Int, TemperatureCell>();
+    List<Vector2Int> dirtyCells = new List<Vector2Int>();
+
+    [SerializeField] int sameCellMultiplier = 3;
+
+    [Header("Settings")]
+    [SerializeField] float temperatureEvolutionSpeed = 0.1f;
+    [SerializeField] float maxTemperatureNeeded;
+    public float temperatureBaseValue;
+
+    public static TemperatureManager Instance;
+
+    public float TemperatureNeeded
+    {
+        get
+        {
+            return temperatureBaseValue * maxTemperatureNeeded;
+        }
+    }
+
+    // Start is called before the first frame update
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        UpdateTemperatureOfDirtyCells();
+
+        temperatureBaseValue = Mathf.PerlinNoise(100, Time.deltaTime * temperatureEvolutionSpeed);
+    }
+
+    public Vector2Int GetCoordsFromPosition(Vector3 position)
+    {
+        return new Vector2Int(Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.z));
+    }
+
+    public void RemovePenguin(Penguin penguin, Vector2Int coords)
+    {
+        //Remove old position if any
+        if (penguinMap.ContainsKey(coords))
+            penguinMap[coords].penguins.Remove(penguin);
+
+        AddDirtyCells(coords);
+    }
+
+    public void UpdatePenguinPosition(Penguin penguin, Vector2Int oldCoords, Vector2Int newCoords)
+    {
+        RemovePenguin(penguin, oldCoords);
+
+        //Add new position
+        if (!penguinMap.ContainsKey(newCoords))
+            penguinMap.Add(newCoords, new TemperatureCell());
+
+        AddDirtyCells(newCoords);
+        penguinMap[newCoords].penguins.Add(penguin);
+    }
+
+    void AddDirtyCells(Vector2Int coords)
+    {
+        Vector2Int neighbourCoord;
+        for (int x = -1; x < 2; x++)
+        {
+            for (int y = -1; y < 2; y++)
+            {
+                if(!dirtyCells.Contains(coords))
+                {
+                    neighbourCoord = coords;
+                    neighbourCoord.x += x;
+                    neighbourCoord.x += y;
+
+                    dirtyCells.Add(neighbourCoord);
+                }
+            }
+        }
+    }
+
+    void UpdateTemperatureOfDirtyCells()
+    {
+        foreach(Vector2Int coords in dirtyCells)
+        {
+            if(penguinMap.ContainsKey(coords))
+            {
+                UpdateTemperatureOfCell(coords);
+            }
+        }
+    }
+
+    void UpdateTemperatureOfCell(Vector2Int coords)
+    {
+        float temperature = 0;
+        Vector2Int neighbourCoord;
+        for (int x = -1; x < 2; x++)
+        {
+            for (int y = -1; y < 2; y++)
+            {
+                //Ourself
+                if (x == 0 && y == 0)
+                {
+                    temperature += penguinMap[coords].penguins.Count * sameCellMultiplier;
+                }
+                //Neighbours
+                else
+                {
+                    neighbourCoord = coords;
+                    neighbourCoord.x += x;
+                    neighbourCoord.x += y;
+                    if(penguinMap.ContainsKey(neighbourCoord))
+                        temperature += penguinMap[neighbourCoord].penguins.Count;
+                }
+            }
+        }
+
+        penguinMap[coords].temperature = temperature;
+    }
+
+    public float GetTemperatureDelta(Vector2Int coords)
+    {
+        return TemperatureNeeded - penguinMap[coords].temperature;
+    }
+
+#if UNITY_EDITOR
+    [SerializeField] int maxTemperature = 20;
+    private void OnDrawGizmosSelected()
+    {
+        foreach(KeyValuePair<Vector2Int, TemperatureCell> cell in penguinMap)
+        {
+            Gizmos.color = Color.Lerp(Color.blue, Color.red, (float)cell.Value.temperature / maxTemperature);
+            Gizmos.DrawCube(new Vector3(cell.Key.x,0, cell.Key.y), Vector3.one);
+        }
+    }
+#endif
+    public class TemperatureCell
+    {
+        public List<Penguin> penguins = new List<Penguin>();
+        public float temperature = 0;
+    }
+}
