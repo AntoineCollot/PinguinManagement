@@ -10,6 +10,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] float iceGridNoiseSpeedIncrease = 0.05f;
     [SerializeField] float temperatureNoiseSpeedIncrease = 0.05f;
     public UnityEvent onGameOver = new UnityEvent();
+    public bool gameIsOver = false;
+
+    public int Score
+    {
+        get
+        {
+            return Mathf.FloorToInt(Time.time);
+        }
+    }
 
     // Start is called before the first frame update
     void Awake()
@@ -31,6 +40,7 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
+        gameIsOver = true;
         onGameOver.Invoke();
     }
 }

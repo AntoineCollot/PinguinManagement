@@ -12,7 +12,7 @@ public class TemperatureManager : MonoBehaviour
     [SerializeField] float temperatureEvolutionSpeed = 0.1f;
     [HideInInspector] public float temperatureEvolutionSpeedMultiplier = 1f;
     [SerializeField] float maxTemperatureNeeded = 20;
-    public float baseTemperature;
+    [HideInInspector] public float baseTemperature;
     Vector2 temperatureOffset;
 
     List<Vector2Int> dirtyCells = new List<Vector2Int>();

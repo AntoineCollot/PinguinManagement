@@ -5,6 +5,7 @@ using UnityEngine;
 public class PickUpPenguin : MonoBehaviour
 {
     Transform heldPenguin;
+    Vector3 heldPenguinVelocity;
     Camera cam;
 
     [SerializeField] LayerMask penguinLayer = 0;
@@ -52,7 +53,7 @@ public class PickUpPenguin : MonoBehaviour
             if (heldPenguin != null)
             {
                 heldPenguin.SendMessage("OnRelease");
-                heldPenguin.GetComponent<Rigidbody>().velocity = refPosition;
+                heldPenguin.GetComponent<Rigidbody>().velocity = heldPenguinVelocity * 0.25f;
                 heldPenguin = null;
                 refPosition = Vector3.zero;
             }
@@ -61,7 +62,10 @@ public class PickUpPenguin : MonoBehaviour
         //Move the held penguin if any
         if (heldPenguin != null)
         {
+            Vector3 lastPos = heldPenguin.position;
             heldPenguin.position = Vector3.SmoothDamp(heldPenguin.position, cursor.position + Vector3.up * penguinHeldAltitude, ref refPosition, penguinHeldSmooth);
+
+            heldPenguinVelocity = (heldPenguin.position - lastPos) / Time.smoothDeltaTime;
         }
     }
 

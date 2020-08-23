@@ -14,6 +14,7 @@ public class PenguinsManager : MonoBehaviour
     MarchingCubes marchingCubes;
     Camera cam;
 
+    [HideInInspector] public int penguinsCount;
     public static PenguinsManager Instance;
 
     // Start is called before the first frame update
@@ -31,10 +32,12 @@ public class PenguinsManager : MonoBehaviour
         SpawnPenguins(spawnPenguinCount);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void PenguinKilled()
     {
-        
+        penguinsCount--;
+
+        if (penguinsCount <= 0)
+            GameManager.Instance.GameOver();
     }
 
     public bool SpawnPenguins(int count)
@@ -55,6 +58,7 @@ public class PenguinsManager : MonoBehaviour
             if (!locationFound)
                 return false;
 
+            penguinsCount++;
             Instantiate(penguinPrefab, randomSpawnPos, Quaternion.identity, transform);
         }
 

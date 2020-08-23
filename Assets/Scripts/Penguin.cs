@@ -20,7 +20,8 @@ public class Penguin : MonoBehaviour
     [SerializeField] float temperatureComfortableRange = 3;
     [SerializeField] float maxTemperatureDelta = 10;
     [SerializeField] float maxHp = 5;
-    float hp;
+    float freezingHp;
+    float hotHp;
     Vector2Int temperatureCoords = Vector2Int.one * 1000;
     int temperatureAnimHash;
     Material material;
@@ -33,7 +34,8 @@ public class Penguin : MonoBehaviour
         anim = GetComponent<Animator>();
         rigidbody = GetComponent<Rigidbody>();
 
-        hp = maxHp;
+        freezingHp = maxHp;
+        hotHp = maxHp;
         temperatureAnimHash = Animator.StringToHash("Temperature");
 
         material = GetComponentInChildren<SkinnedMeshRenderer>().material;
@@ -67,7 +69,10 @@ public class Penguin : MonoBehaviour
         //Destroy penguin
         if (transform.position.y < -3)
         {
-            KillPenguin();
+           // if(state!=State.Dead)
+          //      AudioManager.Instance.PlayPenguinFallingSound();
+
+            PenguinFall();
             return;
         }
 
@@ -80,7 +85,7 @@ public class Penguin : MonoBehaviour
             transform.Rotate(heldRotationSpeed * Vector3.up * Time.deltaTime, Space.World);
     }
 
-    public void FreezePenguin()
+    public void KillPenguin()
     {
         rigidbody.constraints = RigidbodyConstraints.None;
         rigidbody.drag = 0.01f;
@@ -88,6 +93,7 @@ public class Penguin : MonoBehaviour
         anim.enabled = false;
         state = State.Dead;
         TemperatureManager.Instance.RemovePenguin(this, temperatureCoords);
+        PenguinsManager.Instance.PenguinKilled();
 
         StartCoroutine(AnimMatHeight(1, 0.5f, 1f));
     }
@@ -104,10 +110,14 @@ public class Penguin : MonoBehaviour
         }
     }
 
-    public void KillPenguin()
+    public void PenguinFall()
     {
         Destroy(gameObject);
-        TemperatureManager.Instance.RemovePenguin(this, temperatureCoords);
+        if (state != State.Dead)
+        {
+            TemperatureManager.Instance.RemovePenguin(this, temperatureCoords);
+            PenguinsManager.Instance.PenguinKilled();
+        }
     }
 
     void UpdateTemperaturePosition()
@@ -126,53 +136,36 @@ public class Penguin : MonoBehaviour
         //If the penguin is comfortable
         if (Mathf.Abs(temperatureDelta) < temperatureComfortableRange)
         {
-            hp += Time.deltaTime;
-            hp = Mathf.Clamp(hp, 0, maxHp);
+            freezingHp += Time.deltaTime;
+            hotHp += Time.deltaTime;
+            freezingHp = Mathf.Clamp(freezingHp, 0, maxHp);
+            hotHp = Mathf.Clamp(hotHp, 0, maxHp);
             anim.SetFloat(temperatureAnimHash, 0);
         }
         else
         {
             float temperatureDeltaNormalized = Mathf.Lerp(0, 1, Mathf.Abs(temperatureDelta) / maxTemperatureDelta);
-            hp -= Time.deltaTime * temperatureDeltaNormalized;
             anim.SetFloat(temperatureAnimHash, temperatureDeltaNormalized * Mathf.Sign(temperatureDelta));
 
             if (Mathf.Sign(temperatureDelta) > 0)
             {
                 lastNotComfortableState = TemperatureState.Hot;
-
+                hotHp -= Time.deltaTime * temperatureDeltaNormalized;
             }
             else
             {
                 lastNotComfortableState = TemperatureState.Freezing;
+                freezingHp -= Time.deltaTime * temperatureDeltaNormalized;
             }
         }
 
-        switch (lastNotComfortableState)
-        {
-            case TemperatureState.Freezing:
-                material.SetFloat("_Hot", 0);
-                material.SetFloat("_Freezing", 1 - (hp / maxHp));
-                break;
-            case TemperatureState.Hot:
-            default:
-                material.SetFloat("_Hot", 1 - (hp / maxHp));
-                material.SetFloat("_Freezing", 0);
-                break;
-        }
+        material.SetFloat("_Hot", 1 - (hotHp / maxHp));
+        material.SetFloat("_Freezing", 1 - (freezingHp / maxHp));
 
         //kill
-        if (hp < 0)
+        if (freezingHp < 0 || hotHp<0)
         {
-            switch (lastNotComfortableState)
-            {
-                case TemperatureState.Freezing:
-                default:
-                    FreezePenguin();
-                    break;
-                case TemperatureState.Hot:
-                    KillPenguin();
-                    break;
-            }
+            KillPenguin();
             return;
         }
     }
@@ -184,8 +177,12 @@ public class Penguin : MonoBehaviour
 
     public void OnPickUp()
     {
-        if(state!=State.Dead)
+        if (state != State.Dead)
+        {
             state = State.Held;
+
+            AudioManager.Instance.PlayShortPenguinSound();
+        }
 
         rigidbody.useGravity = false;
     }
