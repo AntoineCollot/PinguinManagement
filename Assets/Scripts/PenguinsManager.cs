@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PenguinsManager : MonoBehaviour
 {
-    [SerializeField] Penguin penguinPrefab;
+    [SerializeField] Penguin penguinPrefab = null;
     [SerializeField] int spawnPenguinCount = 10;
     [SerializeField] float spawnAltitude = 0.5f;
     [SerializeField] Vector2 spawnArea = Vector2.one;
@@ -48,7 +48,7 @@ public class PenguinsManager : MonoBehaviour
             {
                //try a location
                 randomSpawnPos = transform.position + new Vector3(Random.Range(-spawnArea.x, spawnArea.x) * 0.5f, spawnAltitude, Random.Range(-spawnArea.y, spawnArea.y) * 0.5f);
-                locationFound = (grid.GetGridValueAtPosition(randomSpawnPos) + spawnSurfaceLevelMargins) < marchingCubes.surfaceLevel;
+                locationFound = (grid.GetGridValueAtPosition(randomSpawnPos) + spawnSurfaceLevelMargins) > marchingCubes.surfaceLevel;
                 tryCount++;
             } while (!locationFound && tryCount<100);
 

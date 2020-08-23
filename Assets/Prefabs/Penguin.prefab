@@ -252,6 +252,10 @@ MonoBehaviour:
   iceLayer:
     serializedVersion: 2
     m_Bits: 256
+  heldRotationSpeed: 300
+  temperatureComfortableRange: 3
+  maxTemperatureDelta: 10
+  maxHp: 5
 --- !u!1 &1781365505199314334
 GameObject:
   m_ObjectHideFlags: 0
@@ -460,7 +464,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f1ee512204dac1241a9d2298ac3da448, type: 2}
+  - {fileID: 2100000, guid: 01ac15a6b9918084f8d25010a4b687a2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

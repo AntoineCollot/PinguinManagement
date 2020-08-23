@@ -10,9 +10,10 @@ public class TemperatureManager : MonoBehaviour
     Dictionary<Vector2Int, TemperatureCell> penguinMap = new Dictionary<Vector2Int, TemperatureCell>();
     [Header("Settings")]
     [SerializeField] float temperatureEvolutionSpeed = 0.1f;
+    [HideInInspector] public float temperatureEvolutionSpeedMultiplier = 1f;
     [SerializeField] float maxTemperatureNeeded = 20;
     public float baseTemperature;
-    float randomTemperatureOffset;
+    Vector2 temperatureOffset;
 
     List<Vector2Int> dirtyCells = new List<Vector2Int>();
 
@@ -30,7 +31,7 @@ public class TemperatureManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        randomTemperatureOffset = UnityEngine.Random.Range(-100f, 100f);
+        temperatureOffset.x = UnityEngine.Random.Range(-100f, 100f);
     }
 
     // Update is called once per frame
@@ -38,7 +39,8 @@ public class TemperatureManager : MonoBehaviour
     {
         UpdateDirtyCells();
 
-        baseTemperature = Mathf.PerlinNoise(randomTemperatureOffset, temperatureEvolutionSpeed * Time.time);
+        temperatureOffset.y += Time.deltaTime * temperatureEvolutionSpeed * temperatureEvolutionSpeedMultiplier;
+        baseTemperature = Mathf.PerlinNoise(temperatureOffset.x, temperatureOffset.y);
     }
 
     public class TemperatureCell

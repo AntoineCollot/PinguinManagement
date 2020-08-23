@@ -10,30 +10,44 @@ public class IceGrid : MonoBehaviour
     public float[,] grid;
     public float noiseFrequency;
     public float noiseSpeed;
+    [HideInInspector] public float noiseSpeedMutliplier = 1;
 
     Vector2 noiseOffset;
+    bool noiseInitialized = false;
+
+    public static IceGrid Instance;
 
     // Start is called before the first frame update
     void Awake()
     {
+        Instance = this;
         grid = new float[gridDimensions.x, gridDimensions.y];
     }
 
     public void UpdateGridValues()
     {
+        if (!noiseInitialized)
+        {
+            noiseInitialized = true;
+            noiseOffset = new Vector2(Random.Range(-1000, 1000), Random.Range(-1000, 1000));
+        }
+
         for (int x = 0; x < gridDimensions.x; x++)
         {
             for (int y = 0; y < gridDimensions.y; y++)
             {
-                grid[x, y] = Mathf.PerlinNoise((float)x / gridDimensions.x * noiseFrequency + noiseOffset.x, (float)y / gridDimensions.y * noiseFrequency + noiseOffset.y);
+                grid[x, y] = Mathf.PerlinNoise((float)x / gridDimensions.x * noiseFrequency + Mathf.Cos(noiseOffset.x) * 5, (float)y / gridDimensions.y * noiseFrequency + noiseOffset.y);
             }
         }
     }
 
     private void Update()
     {
-        noiseOffset.x =Mathf.Cos(noiseOffset.x + Time.deltaTime * noiseSpeed);
-        noiseOffset.y += Time.deltaTime * noiseSpeed;
+        if (Time.time > 3)
+        {
+            noiseOffset.x += Time.deltaTime * noiseSpeed;
+            noiseOffset.y += Time.deltaTime * noiseSpeed * noiseSpeedMutliplier;
+        }
     }
 
 #if UNITY_EDITOR

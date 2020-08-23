@@ -8,12 +8,13 @@ public class Penguin : MonoBehaviour
     bool animIsGroundedState = false;
     bool animIsHeldState = false;
 
-    public enum State { Idle, Held, None }
+    public enum State { Idle, Held,Dead, None }
     State state = State.Idle;
     bool isGrounded = false;
     new Rigidbody rigidbody;
 
     [SerializeField] LayerMask iceLayer = 1 << 8;
+    [SerializeField] float heldRotationSpeed = 50;
 
     [Header("Temperature")]
     [SerializeField] float temperatureComfortableRange = 3;
@@ -22,6 +23,9 @@ public class Penguin : MonoBehaviour
     float hp;
     Vector2Int temperatureCoords = Vector2Int.one * 1000;
     int temperatureAnimHash;
+    Material material;
+    public enum TemperatureState { Comfortable, Freezing, Hot }
+    TemperatureState lastNotComfortableState;
 
     // Start is called before the first frame update
     void Awake()
@@ -31,11 +35,21 @@ public class Penguin : MonoBehaviour
 
         hp = maxHp;
         temperatureAnimHash = Animator.StringToHash("Temperature");
+
+        material = GetComponentInChildren<SkinnedMeshRenderer>().material;
+    }
+
+    private void Start()
+    {
+        transform.localEulerAngles = new Vector3(0, Random.Range(-180, 180), 0);
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (state == State.Dead)
+            return;
+
         UpdateGroundedState();
 
         if (animIsGroundedState != isGrounded)
@@ -57,26 +71,36 @@ public class Penguin : MonoBehaviour
             return;
         }
 
+        //Temperature
         UpdateTemperaturePosition();
+        UpdateTemperatureState();
 
-        float temperatureDelta = TemperatureManager.Instance.GetTemperatureDelta(temperatureCoords);
-        //If the penguin is comfortable
-        if (Mathf.Abs(temperatureDelta)<temperatureComfortableRange)
+        //Rotate while held
+        if (state == State.Held)
+            transform.Rotate(heldRotationSpeed * Vector3.up * Time.deltaTime, Space.World);
+    }
+
+    public void FreezePenguin()
+    {
+        rigidbody.constraints = RigidbodyConstraints.None;
+        rigidbody.drag = 0.01f;
+        rigidbody.AddTorque(new Vector3(Random.Range(-1, 1), 0, Random.Range(-1, 1)) * 0.2f);
+        anim.enabled = false;
+        state = State.Dead;
+        TemperatureManager.Instance.RemovePenguin(this, temperatureCoords);
+
+        StartCoroutine(AnimMatHeight(1, 0.5f, 1f));
+    }
+
+    IEnumerator AnimMatHeight(float start, float end, float time)
+    {
+        float t = 0;
+        while(t<1)
         {
-            hp += Time.deltaTime;
-            anim.SetFloat(temperatureAnimHash, 0);
-        }
-        else
-        {
-            float temperatureDeltaNormalized = Mathf.Lerp(0, 1, Mathf.Abs(temperatureDelta) / maxTemperatureDelta);
-            hp -= Time.deltaTime * temperatureDeltaNormalized;
-            anim.SetFloat(temperatureAnimHash, temperatureDeltaNormalized * Mathf.Sign(temperatureDelta));
-        }
-        //kill
-        if(hp<0)
-        {
-            KillPenguin();
-            return;
+            t += Time.deltaTime/time;
+            material.SetFloat("_LocalMaxY", Mathf.Lerp(start, end, t));
+
+            yield return null;
         }
     }
 
@@ -96,6 +120,63 @@ public class Penguin : MonoBehaviour
         }
     }
 
+    void UpdateTemperatureState()
+    {
+        float temperatureDelta = TemperatureManager.Instance.GetTemperatureDelta(temperatureCoords);
+        //If the penguin is comfortable
+        if (Mathf.Abs(temperatureDelta) < temperatureComfortableRange)
+        {
+            hp += Time.deltaTime;
+            hp = Mathf.Clamp(hp, 0, maxHp);
+            anim.SetFloat(temperatureAnimHash, 0);
+        }
+        else
+        {
+            float temperatureDeltaNormalized = Mathf.Lerp(0, 1, Mathf.Abs(temperatureDelta) / maxTemperatureDelta);
+            hp -= Time.deltaTime * temperatureDeltaNormalized;
+            anim.SetFloat(temperatureAnimHash, temperatureDeltaNormalized * Mathf.Sign(temperatureDelta));
+
+            if (Mathf.Sign(temperatureDelta) > 0)
+            {
+                lastNotComfortableState = TemperatureState.Hot;
+
+            }
+            else
+            {
+                lastNotComfortableState = TemperatureState.Freezing;
+            }
+        }
+
+        switch (lastNotComfortableState)
+        {
+            case TemperatureState.Freezing:
+                material.SetFloat("_Hot", 0);
+                material.SetFloat("_Freezing", 1 - (hp / maxHp));
+                break;
+            case TemperatureState.Hot:
+            default:
+                material.SetFloat("_Hot", 1 - (hp / maxHp));
+                material.SetFloat("_Freezing", 0);
+                break;
+        }
+
+        //kill
+        if (hp < 0)
+        {
+            switch (lastNotComfortableState)
+            {
+                case TemperatureState.Freezing:
+                default:
+                    FreezePenguin();
+                    break;
+                case TemperatureState.Hot:
+                    KillPenguin();
+                    break;
+            }
+            return;
+        }
+    }
+
     public void UpdateGroundedState()
     {
         isGrounded = Physics.OverlapSphere(transform.position, 0.1f,iceLayer).Length > 0;
@@ -103,15 +184,17 @@ public class Penguin : MonoBehaviour
 
     public void OnPickUp()
     {
-        state = State.Held;
+        if(state!=State.Dead)
+            state = State.Held;
 
         rigidbody.useGravity = false;
     }
 
     public void OnRelease()
     {
-        state = State.Idle;
-        rigidbody.useGravity = true;
+        if (state != State.Dead)
+            state = State.Idle;
 
+        rigidbody.useGravity = true;
     }
 }

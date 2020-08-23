@@ -8,10 +8,11 @@ public class PickUpPenguin : MonoBehaviour
     Camera cam;
 
     [SerializeField] LayerMask penguinLayer = 0;
-    [SerializeField] LayerMask iceLayer = 0;
+    [SerializeField] LayerMask groundLayers = 0;
     [SerializeField] Transform cursor = null;
     [SerializeField] float penguinHeldAltitude = 1;
     [SerializeField] float penguinHeldSmooth = 0.1f;
+    [SerializeField] float penguinSphereCastRadius = 0.2f;
 
     Vector3 refPosition;
 
@@ -28,7 +29,7 @@ public class PickUpPenguin : MonoBehaviour
         Ray camRay = cam.ScreenPointToRay(Input.mousePosition);
 
         //Penguin raycast
-        if (Physics.Raycast(camRay, out hit,Mathf.Infinity, penguinLayer))
+        if (Physics.SphereCast(camRay, penguinSphereCastRadius, out hit,Mathf.Infinity, penguinLayer))
         {
             //Pick up the penguin
             if (Input.GetMouseButtonDown(0))
@@ -39,7 +40,7 @@ public class PickUpPenguin : MonoBehaviour
         }
 
         //Ice raycast
-        if (Physics.Raycast(camRay, out hit, Mathf.Infinity, iceLayer))
+        if (Physics.Raycast(camRay, out hit, Mathf.Infinity, groundLayers))
         {
             //Place the cursor
             cursor.position = hit.point;
@@ -51,6 +52,7 @@ public class PickUpPenguin : MonoBehaviour
             if (heldPenguin != null)
             {
                 heldPenguin.SendMessage("OnRelease");
+                heldPenguin.GetComponent<Rigidbody>().velocity = refPosition;
                 heldPenguin = null;
                 refPosition = Vector3.zero;
             }
