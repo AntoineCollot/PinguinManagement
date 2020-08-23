@@ -11,7 +11,7 @@ public class TemperatureManager : MonoBehaviour
     [Header("Settings")]
     [SerializeField] float temperatureEvolutionSpeed = 0.1f;
     [SerializeField] float maxTemperatureNeeded = 20;
-    float baseTemperature;
+    public float baseTemperature;
     float randomTemperatureOffset;
 
     List<Vector2Int> dirtyCells = new List<Vector2Int>();
@@ -49,7 +49,7 @@ public class TemperatureManager : MonoBehaviour
 
     internal float GetTemperatureDelta(Vector2Int coords)
     {
-        return penguinMap[coords].temperature - TemperatureNeeded;
+        return penguinMap[coords].temperature - TemperatureNeeded - 3;
     }
 
     internal void RemovePenguin(Penguin penguin, Vector2Int coords)
