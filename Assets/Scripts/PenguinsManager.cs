@@ -10,9 +10,14 @@ public class PenguinsManager : MonoBehaviour
     [SerializeField] Vector2 spawnArea = Vector2.one;
     [SerializeField] float spawnSurfaceLevelMargins = 0.1f;
     [SerializeField] LayerMask iceLayer = 1 << 8;
-    IceGrid grid;
+    IceGridScroll grid;
     MarchingCubes marchingCubes;
     Camera cam;
+
+    [Header("Respawning")]
+    [SerializeField] float minRespawnTime = 7;
+    [SerializeField] float maxRespawnTime = 15;
+    [SerializeField] float respawnAltitude = 0.5f;
 
     [HideInInspector] public int penguinsCount;
     public static PenguinsManager Instance;
@@ -21,7 +26,7 @@ public class PenguinsManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        grid = FindObjectOfType<IceGrid>();
+        grid = FindObjectOfType<IceGridScroll>();
         marchingCubes = FindObjectOfType<MarchingCubes>();
         cam = Camera.main;
     }
@@ -29,7 +34,9 @@ public class PenguinsManager : MonoBehaviour
     private void Start()
     {
         grid.UpdateGridValues();
-        SpawnPenguins(spawnPenguinCount);
+        SpawnPenguins(spawnPenguinCount, spawnAltitude);
+
+        StartCoroutine(RespawnPenguins());
     }
 
     public void PenguinKilled()
@@ -40,7 +47,17 @@ public class PenguinsManager : MonoBehaviour
             GameManager.Instance.GameOver();
     }
 
-    public bool SpawnPenguins(int count)
+    IEnumerator RespawnPenguins()
+    {
+        while(!GameManager.Instance.gameIsOver)
+        {
+            yield return new WaitForSeconds(Random.Range(minRespawnTime, maxRespawnTime));
+
+            SpawnPenguins(1,respawnAltitude);
+        }
+    }
+
+    public bool SpawnPenguins(int count, float spawnAltitude =1)
     {
         Vector3 randomSpawnPos;
         for (int i = 0; i < count; i++)

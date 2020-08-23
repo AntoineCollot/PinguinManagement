@@ -16,6 +16,10 @@ public class Penguin : MonoBehaviour
     [SerializeField] LayerMask iceLayer = 1 << 8;
     [SerializeField] float heldRotationSpeed = 50;
 
+    [Header("Hovering")]
+
+    bool isHovered = false;
+
     [Header("Temperature")]
     [SerializeField] float temperatureComfortableRange = 3;
     [SerializeField] float maxTemperatureDelta = 10;
@@ -24,9 +28,11 @@ public class Penguin : MonoBehaviour
     float hotHp;
     Vector2Int temperatureCoords = Vector2Int.one * 1000;
     int temperatureAnimHash;
+    float refTemperatureChange;
+    const float smoothTemperatureChange = 0.05f;
+    float currentTemperatureAnimValue;
+
     Material material;
-    public enum TemperatureState { Comfortable, Freezing, Hot }
-    TemperatureState lastNotComfortableState;
 
     // Start is called before the first frame update
     void Awake()
@@ -58,6 +64,11 @@ public class Penguin : MonoBehaviour
         {
             anim.SetBool("IsGrounded", isGrounded);
             animIsGroundedState = isGrounded;
+
+            if(!isGrounded && state == State.Idle)
+            {
+                 AudioManager.Instance.PlayPenguinFallingSound();
+            }
         }
 
         if (animIsHeldState != (state == State.Held))
@@ -69,9 +80,6 @@ public class Penguin : MonoBehaviour
         //Destroy penguin
         if (transform.position.y < -3)
         {
-           // if(state!=State.Dead)
-          //      AudioManager.Instance.PlayPenguinFallingSound();
-
             PenguinFall();
             return;
         }
@@ -133,6 +141,9 @@ public class Penguin : MonoBehaviour
     void UpdateTemperatureState()
     {
         float temperatureDelta = TemperatureManager.Instance.GetTemperatureDelta(temperatureCoords);
+
+        float targetTemperatureAnimValue;
+
         //If the penguin is comfortable
         if (Mathf.Abs(temperatureDelta) < temperatureComfortableRange)
         {
@@ -140,25 +151,29 @@ public class Penguin : MonoBehaviour
             hotHp += Time.deltaTime;
             freezingHp = Mathf.Clamp(freezingHp, 0, maxHp);
             hotHp = Mathf.Clamp(hotHp, 0, maxHp);
-            anim.SetFloat(temperatureAnimHash, 0);
+            targetTemperatureAnimValue = 0;
         }
         else
         {
             float temperatureDeltaNormalized = Mathf.Lerp(0, 1, Mathf.Abs(temperatureDelta) / maxTemperatureDelta);
-            anim.SetFloat(temperatureAnimHash, temperatureDeltaNormalized * Mathf.Sign(temperatureDelta));
+            targetTemperatureAnimValue = temperatureDeltaNormalized * Mathf.Sign(temperatureDelta);
 
             if (Mathf.Sign(temperatureDelta) > 0)
             {
-                lastNotComfortableState = TemperatureState.Hot;
                 hotHp -= Time.deltaTime * temperatureDeltaNormalized;
+                freezingHp += Time.deltaTime;
+                freezingHp = Mathf.Clamp(freezingHp, 0, maxHp);
             }
             else
             {
-                lastNotComfortableState = TemperatureState.Freezing;
                 freezingHp -= Time.deltaTime * temperatureDeltaNormalized;
+                hotHp += Time.deltaTime;
+                hotHp = Mathf.Clamp(hotHp, 0, maxHp);
             }
         }
 
+        currentTemperatureAnimValue = Mathf.SmoothDamp(currentTemperatureAnimValue, targetTemperatureAnimValue, ref refTemperatureChange, smoothTemperatureChange);
+        anim.SetFloat(temperatureAnimHash, currentTemperatureAnimValue);
         material.SetFloat("_Hot", 1 - (hotHp / maxHp));
         material.SetFloat("_Freezing", 1 - (freezingHp / maxHp));
 
@@ -173,6 +188,23 @@ public class Penguin : MonoBehaviour
     public void UpdateGroundedState()
     {
         isGrounded = Physics.OverlapSphere(transform.position, 0.1f,iceLayer).Length > 0;
+    }
+
+    public void OnHover()
+    {
+        if (state != State.Dead && !isHovered)
+        {
+            anim.SetTrigger("OnHover");
+        }
+
+        isHovered = true;
+        material.SetFloat("_Hovering", 1);
+    }
+
+    public void OffHover()
+    {
+        material.SetFloat("_Hovering", 0);
+        isHovered = false;
     }
 
     public void OnPickUp()

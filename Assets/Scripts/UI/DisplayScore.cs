@@ -17,6 +17,6 @@ public class DisplayScore : MonoBehaviour
     void LateUpdate()
     {
         if(!GameManager.Instance.gameIsOver)
-            text.text = GameManager.Instance.Score.ToString();
+            text.text = GameManager.Instance.score.ToString("N0");
     }
 }

@@ -19,20 +19,25 @@ public class AudioManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-
-        musicAudio.clip = musics[Random.Range(0, musics.Length)];
-        musicAudio.Play();
     }
 
     public void PlayPenguinFallingSound()
     {
         sfxAudio.pitch = Random.Range(0.95f, 1.05f);
-        sfxAudio.PlayOneShot(fallingPenguinClip);
+        sfxAudio.PlayOneShot(fallingPenguinClip, 0.5f);
     }
 
     public void PlayShortPenguinSound()
     {
         sfxAudio.pitch = Random.Range(0.95f, 1.05f);
         sfxAudio.PlayOneShot(shortPenguinNoises[Random.Range(0, shortPenguinNoises.Length)]);
+    }
+
+    public void PlayMusic(bool value)
+    {
+        if (value)
+            musicAudio.UnPause();
+        else
+            musicAudio.Pause();
     }
 }

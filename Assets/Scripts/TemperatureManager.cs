@@ -7,6 +7,7 @@ public class TemperatureManager : MonoBehaviour
 {
     [Header("Penguins")]
     [SerializeField] float sameCellMultiplier = 3;
+    [SerializeField] float closeNeighboursMultiplier = 1.5f;
     Dictionary<Vector2Int, TemperatureCell> penguinMap = new Dictionary<Vector2Int, TemperatureCell>();
     [Header("Settings")]
     [SerializeField] float temperatureEvolutionSpeed = 0.1f;
@@ -16,6 +17,9 @@ public class TemperatureManager : MonoBehaviour
     Vector2 temperatureOffset;
 
     List<Vector2Int> dirtyCells = new List<Vector2Int>();
+
+    const int NEIGHBOURS_LOOP_START = -2;
+    const int NEIGHBOURS_LOOP_END = 3;
 
     public float TemperatureNeeded
     {
@@ -83,9 +87,9 @@ public class TemperatureManager : MonoBehaviour
     {
         Vector2Int currentCoords;
 
-        for (int x = -1; x < 2; x++)
+        for (int x = NEIGHBOURS_LOOP_START; x < NEIGHBOURS_LOOP_END; x++)
         {
-            for (int y = -1; y < 2; y++)
+            for (int y = NEIGHBOURS_LOOP_START; y < NEIGHBOURS_LOOP_END; y++)
             {
                 currentCoords = coords;
                 currentCoords.x += x;
@@ -106,14 +110,33 @@ public class TemperatureManager : MonoBehaviour
 
             float temperature = 0;
             Vector2Int neighbourCoords;
-            for (int x = -1; x < 2; x++)
+            for (int x = NEIGHBOURS_LOOP_START; x < NEIGHBOURS_LOOP_END; x++)
             {
-                for (int y = -1; y < 2; y++)
+                for (int y = NEIGHBOURS_LOOP_START; y < NEIGHBOURS_LOOP_END; y++)
                 {
                     //ourself
                     if (x == 0 && y == 0)
                         temperature += penguinMap[coords].penguins.Count * sameCellMultiplier;
-                    //Neighbours
+                    //else
+                    //{
+                    //    neighbourCoords = coords;
+                    //    neighbourCoords.x += x;
+                    //    neighbourCoords.y += y;
+
+                    //    if (penguinMap.ContainsKey(neighbourCoords))
+                    //        temperature += penguinMap[neighbourCoords].penguins.Count;
+                    //}
+                    //Close Neighbours
+                    else if (Mathf.Abs(x) <= 1 && Mathf.Abs(y) <= 1)
+                    {
+                        neighbourCoords = coords;
+                        neighbourCoords.x += x;
+                        neighbourCoords.y += y;
+
+                        if (penguinMap.ContainsKey(neighbourCoords))
+                            temperature += penguinMap[neighbourCoords].penguins.Count * closeNeighboursMultiplier;
+                    }
+                    //Far Neighbours
                     else
                     {
                         neighbourCoords = coords;

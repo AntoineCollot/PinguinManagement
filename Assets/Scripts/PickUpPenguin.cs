@@ -5,6 +5,7 @@ using UnityEngine;
 public class PickUpPenguin : MonoBehaviour
 {
     Transform heldPenguin;
+    Transform hoveredPenguin;
     Vector3 heldPenguinVelocity;
     Camera cam;
 
@@ -32,11 +33,28 @@ public class PickUpPenguin : MonoBehaviour
         //Penguin raycast
         if (Physics.SphereCast(camRay, penguinSphereCastRadius, out hit,Mathf.Infinity, penguinLayer))
         {
+            if (hit.transform != hoveredPenguin)
+            {
+                if(hoveredPenguin!=null)
+                    hoveredPenguin.SendMessage("OffHover");
+
+                hoveredPenguin = hit.transform;
+                hoveredPenguin.SendMessage("OnHover");
+            }
+
             //Pick up the penguin
             if (Input.GetMouseButtonDown(0))
             {
                 heldPenguin = hit.transform;
                 heldPenguin.SendMessage("OnPickUp");
+            }
+        }
+        else
+        {
+            if (hoveredPenguin != null)
+            {
+                hoveredPenguin.SendMessage("OffHover");
+                hoveredPenguin = null;
             }
         }
 

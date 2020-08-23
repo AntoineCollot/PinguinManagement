@@ -182,7 +182,7 @@ public class MarchingCubes : MonoBehaviour
         mesh.RecalculateNormals();
         meshFilter.mesh = mesh;
 
-        //meshCollider.sharedMesh = null;
-        meshCollider.sharedMesh = mesh;
+        if(meshCollider!=null)
+            meshCollider.sharedMesh = mesh;
     }
 }

@@ -13,6 +13,10 @@ Shader "Toon/HotCold" {
 		//Hot
 		_HotColor("Hot Color", Color) = (1,0,0,1)
 		_Hot("Hot", Range(0,1)) = 0
+		
+		//Hovering
+		_Hovering ("Hovering", Range(0,1)) = 0
+		_HoveringColor ("Hovering Color", Color) = (1,1,1,1)
 	}
 
 	SubShader {
@@ -58,6 +62,9 @@ struct Input {
 half _Freezing;
 half _Hot;
 half _LocalMaxY;
+//0 not hovered, 1 hovered
+uniform float _Hovering;
+fixed4 _HoveringColor;
 
 void surf (Input IN, inout SurfaceOutput o) {
 	//Ice
@@ -78,7 +85,7 @@ void surf (Input IN, inout SurfaceOutput o) {
 	half4 hotCol = lerp(texCol, _HotColor, pow(localPos.y *1.5,1.5));
 	
 	//Blending
-	o.Albedo = lerp(lerp(texCol.rgb, iceCol, _Freezing),lerp(texCol.rgb, hotCol, _Hot),saturate(_Hot/(_Freezing+0.0001)));
+	o.Albedo = lerp(lerp(texCol.rgb, iceCol, _Freezing),lerp(texCol.rgb, hotCol, _Hot),saturate(_Hot/(_Freezing+0.0001))) + _Hovering * _HoveringColor *_HoveringColor.a;
 	o.Emission = lerp(fixed4(0,0,0,0), iceEmission, _Freezing);
 	o.Alpha = texCol.a;
 }

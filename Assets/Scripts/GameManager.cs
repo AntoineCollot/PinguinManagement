@@ -7,16 +7,28 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
+    [Header("Difficulty Increase")]
     [SerializeField] float iceGridNoiseSpeedIncrease = 0.05f;
     [SerializeField] float temperatureNoiseSpeedIncrease = 0.05f;
-    public UnityEvent onGameOver = new UnityEvent();
-    public bool gameIsOver = false;
+    IceGridScroll grid;
 
-    public int Score
+    [Header("GameOver")]
+    public UnityEvent onGameOver = new UnityEvent();
+    [HideInInspector] public bool gameIsOver = false;
+
+    [Header("Score")]
+    [SerializeField] float scoreIncreasePerPenguinPerSec = 0.1f;
+    [HideInInspector] public float score;
+
+    [Header("Timer")]
+    public System.TimeSpan fullTime = new System.TimeSpan(0,3,0);
+    public UnityEvent onTimesOff = new UnityEvent();
+
+    public System.TimeSpan RemainingTime
     {
         get
         {
-            return Mathf.FloorToInt(Time.time);
+            return fullTime - new System.TimeSpan(0, 0, Mathf.FloorToInt(Time.time));
         }
     }
 
@@ -24,23 +36,47 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        Cursor.visible = false;
+    }
+
+    void Start()
+    {
+        grid = FindObjectOfType<IceGridScroll>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (gameIsOver)
+            return;
+
+        score += Time.deltaTime * scoreIncreasePerPenguinPerSec * PenguinsManager.Instance.penguinsCount;
+
         IncreaseGameDifficulty();
+
+        if(RemainingTime.Ticks<0)
+        {
+            TimesOff();
+        }
     }
 
     void IncreaseGameDifficulty()
     {
-        IceGrid.Instance.noiseSpeedMutliplier += iceGridNoiseSpeedIncrease * Time.deltaTime;
+        grid.noiseSpeedMutliplier += iceGridNoiseSpeedIncrease * Time.deltaTime;
         TemperatureManager.Instance.temperatureEvolutionSpeedMultiplier += temperatureNoiseSpeedIncrease * Time.deltaTime;
     }
 
     public void GameOver()
     {
         gameIsOver = true;
+        Cursor.visible = true;
         onGameOver.Invoke();
+    }
+
+    public void TimesOff()
+    {
+        gameIsOver = true;
+        onTimesOff.Invoke();
     }
 }

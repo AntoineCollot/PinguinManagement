@@ -2,56 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class IceGrid : MonoBehaviour
+public abstract class IceGrid : MonoBehaviour
 {
+    [Header("Grid")]
     public Vector2Int gridDimensions;
     public Vector3 cellSize = Vector3.one;
-
     public float[,] grid;
-    public float noiseFrequency;
-    public float noiseSpeed;
-    [HideInInspector] public float noiseSpeedMutliplier = 1;
-
-    Vector2 noiseOffset;
-    bool noiseInitialized = false;
 
     public static IceGrid Instance;
 
     // Start is called before the first frame update
-    void Awake()
+    protected void Awake()
     {
         Instance = this;
         grid = new float[gridDimensions.x, gridDimensions.y];
     }
 
-    public void UpdateGridValues()
-    {
-        if (!noiseInitialized)
-        {
-            noiseInitialized = true;
-            noiseOffset = new Vector2(Random.Range(-1000, 1000), Random.Range(-1000, 1000));
-        }
+    public abstract void UpdateGridValues();
 
-        for (int x = 0; x < gridDimensions.x; x++)
-        {
-            for (int y = 0; y < gridDimensions.y; y++)
-            {
-                grid[x, y] = Mathf.PerlinNoise((float)x / gridDimensions.x * noiseFrequency + Mathf.Cos(noiseOffset.x) * 5, (float)y / gridDimensions.y * noiseFrequency + noiseOffset.y);
-            }
-        }
-    }
-
-    private void Update()
-    {
-        if (Time.time > 3)
-        {
-            noiseOffset.x += Time.deltaTime * noiseSpeed;
-            noiseOffset.y += Time.deltaTime * noiseSpeed * noiseSpeedMutliplier;
-        }
-    }
+    protected abstract void Update();
 
 #if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    protected void OnDrawGizmosSelected()
     {
         if (grid == null)
             return;
@@ -67,6 +39,16 @@ public class IceGrid : MonoBehaviour
         }
     }
 #endif
+
+    protected Vector2Int WorldPosToGridCoords(Vector3 position)
+    {
+        position -= transform.position;
+        Vector2Int coords = new Vector2Int(
+            Mathf.FloorToInt(position.x / cellSize.x),
+            Mathf.FloorToInt(position.z / cellSize.z)
+            );
+        return coords;
+    }
 
     public float GetGridValueAtPosition(Vector3 position)
     {
