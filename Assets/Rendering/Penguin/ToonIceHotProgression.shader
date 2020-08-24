@@ -82,7 +82,7 @@ void surf (Input IN, inout SurfaceOutput o) {
 	half4 texCol = tex2D(_MainTex, IN.uv_MainTex) * _Color;
 	
 	//Hot
-	half4 hotCol = lerp(texCol, _HotColor, pow(localPos.y *1.5,1.5));
+	half4 hotCol = lerp(texCol, _HotColor, saturate(pow(localPos.y *1.5,1.5)) * 0.8);
 	
 	//Blending
 	o.Albedo = lerp(lerp(texCol.rgb, iceCol, _Freezing),lerp(texCol.rgb, hotCol, _Hot),saturate(_Hot/(_Freezing+0.0001))) + _Hovering * _HoveringColor *_HoveringColor.a;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class MuteMusicButton : MonoBehaviour
 {
     Button button;
-    bool isMusicOn = true;
+    static bool isMusicOn = true;
 
     [SerializeField] Image image = null;
     [SerializeField] Sprite musicPlayingSprite = null;
@@ -17,17 +17,25 @@ public class MuteMusicButton : MonoBehaviour
     {
         button = GetComponent<Button>();
         button.onClick.AddListener(ToggleOnOff);
+
+        AudioManager.Instance.PlayMusic(isMusicOn);
+        UpdateButtonState();
     }
 
     public void ToggleOnOff()
     {
         isMusicOn = !isMusicOn;
 
+        UpdateButtonState();
+
+        AudioManager.Instance.PlayMusic(isMusicOn);
+    }
+
+    void UpdateButtonState()
+    {
         if (isMusicOn)
             image.sprite = musicPlayingSprite;
         else
             image.sprite = musicMutedSprite;
-
-        AudioManager.Instance.PlayMusic(isMusicOn);
     }
 }
