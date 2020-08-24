@@ -35,7 +35,7 @@ public class MarchingCubes : MonoBehaviour
         {
             grid.UpdateGridValues();
             //Don't update both on the same frame after the init
-            if (Time.time > 0.1f)
+            if (Time.timeSinceLevelLoad > 0.1f)
                 yield return null;
             GenerateMesh();
 

@@ -25,7 +25,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _ColorMask: 15
-    - _FillThreshold: 0.4352587
+    - _FillThreshold: 0.5415554
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0

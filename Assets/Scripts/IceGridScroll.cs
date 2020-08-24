@@ -30,9 +30,9 @@ public class IceGridScroll : IceGrid
 
     protected override void Update()
     {
-        if (Time.time > 3)
+        if (Time.timeSinceLevelLoad > 3  && !GameManager.Instance.gameIsOver)
         {
-            noiseOffset.x += Mathf.Cos(Time.time/5) * Time.deltaTime * noiseSpeed;
+            noiseOffset.x += Mathf.Cos(Time.timeSinceLevelLoad / 5) * Time.deltaTime * noiseSpeed;
             noiseOffset.y += Time.deltaTime * noiseSpeed * noiseSpeedMutliplier;
         }
     }

@@ -6,6 +6,8 @@ public class ScreenFrostController : MonoBehaviour
 {
     PostProcessFrost postProcess;
     [SerializeField] float maxIntensity = 0.5f;
+    [SerializeField] float hotUpperBound = 0.75f;
+    [SerializeField] float coldLowerBound = 0.15f;
 
     // Start is called before the first frame update
     void Start()
@@ -16,6 +18,8 @@ public class ScreenFrostController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        postProcess.intensity = Mathf.Lerp(0, maxIntensity, (TemperatureManager.Instance.baseTemperature - 0.5f)*2);
+        float invUpperBound = 1 - hotUpperBound;
+        float invLowerBound = 1 - coldLowerBound;
+        postProcess.intensity = Mathf.Lerp(0, maxIntensity, (TemperatureManager.Instance.baseTemperature - invUpperBound)/(invLowerBound-invUpperBound));
     }
 }

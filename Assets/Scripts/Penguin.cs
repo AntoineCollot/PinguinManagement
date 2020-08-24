@@ -145,7 +145,7 @@ public class Penguin : MonoBehaviour
         float targetTemperatureAnimValue;
 
         //If the penguin is comfortable
-        if (Mathf.Abs(temperatureDelta) < temperatureComfortableRange)
+        if (Mathf.Abs(temperatureDelta) < temperatureComfortableRange || GameManager.Instance.gameIsOver)
         {
             freezingHp += Time.deltaTime;
             hotHp += Time.deltaTime;

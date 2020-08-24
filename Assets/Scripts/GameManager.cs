@@ -24,11 +24,14 @@ public class GameManager : MonoBehaviour
     public System.TimeSpan fullTime = new System.TimeSpan(0,3,0);
     public UnityEvent onTimesOff = new UnityEvent();
 
+    [Header("WebCursorFix")]
+    [SerializeField] Texture2D cursorTex = null;
+
     public System.TimeSpan RemainingTime
     {
         get
         {
-            return fullTime - new System.TimeSpan(0, 0, Mathf.FloorToInt(Time.time));
+            return fullTime - new System.TimeSpan(0, 0, Mathf.FloorToInt(Time.timeSinceLevelLoad));
         }
     }
 
@@ -43,6 +46,13 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         grid = FindObjectOfType<IceGridScroll>();
+    }
+
+    private void OnDestroy()
+    {
+        Cursor.visible = true;
+        Cursor.SetCursor(cursorTex, Vector2.zero, CursorMode.ForceSoftware);
+        gameIsOver = false;
     }
 
     // Update is called once per frame
@@ -69,14 +79,23 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
+        if (gameIsOver)
+            return;
+
         gameIsOver = true;
         Cursor.visible = true;
+        Cursor.SetCursor(cursorTex, Vector2.zero, CursorMode.ForceSoftware);
         onGameOver.Invoke();
     }
 
     public void TimesOff()
     {
+        if (gameIsOver)
+            return;
+
         gameIsOver = true;
+        Cursor.visible = true;
+        Cursor.SetCursor(cursorTex, Vector2.zero, CursorMode.ForceSoftware);
         onTimesOff.Invoke();
     }
 }

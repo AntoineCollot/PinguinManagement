@@ -527,12 +527,17 @@ PrefabInstance:
     - target: {fileID: 1654585923116905237, guid: 583540491e816124bb7f086eb7ffcd2c,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -17.300049
+      value: -17.300293
       objectReference: {fileID: 0}
     - target: {fileID: 1654585923116905238, guid: 583540491e816124bb7f086eb7ffcd2c,
         type: 3}
       propertyPath: m_Name
       value: FullScreen Button
+      objectReference: {fileID: 0}
+    - target: {fileID: 1654585923116905238, guid: 583540491e816124bb7f086eb7ffcd2c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 583540491e816124bb7f086eb7ffcd2c, type: 3}
